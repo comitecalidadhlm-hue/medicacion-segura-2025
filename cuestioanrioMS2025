@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafío de Seguridad en Medicación</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .progress-bar {
+            height: 10px;
+            transition: width 0.3s ease;
+        }
+        .card {
+            perspective: 1000px;
+        }
+        .card-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            backface-visibility: hidden;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .shake {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body class="bg-blue-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-blue-800 mb-2">Desafío de Seguridad en Medicación</h1>
+            <p class="text-gray-600">Pon a prueba tus conocimientos sobre procedimientos seguros de administración de medicamentos</p>
+        </header>
+
+        <!-- Game Area -->
+        <div id="game-container" class="max-w-4xl mx-auto">
+            <!-- Start Screen -->
+            <div id="start-screen" class="bg-white rounded-xl shadow-lg p-6 text-center">
+                <div class="w-24 h-24 mx-auto mb-6 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-pills text-blue-500 text-4xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-blue-800 mb-4">Capacitación en Seguridad de Medicación</h2>
+                <p class="text-gray-600 mb-6">Este juego evaluará tus conocimientos sobre el proceso de 11 pasos para administración de medicamentos. ¡Responde correctamente para avanzar en cada paso!</p>
+                <button id="start-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105">
+                    Comenzar Desafío <i class="fas fa-play ml-2"></i>
+                </button>
+            </div>
+
+            <!-- Game Screen -->
+            <div id="game-screen" class="hidden bg-white rounded-xl shadow-lg p-6">
+                <!-- Progress Bar -->
+                <div class="mb-6">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-sm font-medium text-blue-700">Progreso</span>
+                        <span id="progress-text" class="text-sm font-medium text-blue-700">Paso 1 de 11</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="progress-bar" class="progress-bar bg-blue-600 rounded-full" style="width: 9%"></div>
+                    </div>
+                </div>
+
+                <!-- Step Indicator -->
+                <div class="flex items-center mb-6">
+                    <div class="bg-blue-100 text-blue-800 font-bold rounded-full w-10 h-10 flex items-center justify-center mr-4">
+                        <span id="current-step">1</span>
+                    </div>
+                    <h2 id="step-title" class="text-xl font-bold text-blue-800">Hand Hygiene (5 Moments WHO)</h2>
+                </div>
+
+                <!-- Question Card -->
+                <div id="question-card" class="card mb-6 cursor-pointer" onclick="flipCard()">
+                    <div class="card-inner bg-white border border-gray-200 rounded-lg overflow-hidden">
+                        <div class="card-front p-6">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800 mb-3">Pregunta:</h3>
+                                    <p id="question-text" class="text-gray-700">Which of these is NOT one of the WHO's 5 Moments for Hand Hygiene?</p>
+                                </div>
+                                <div class="text-blue-500">
+                                    <i class="fas fa-sync-alt text-xl"></i>
+                                    <span class="block text-xs mt-1">Click para voltear</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-back bg-blue-50 p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Respuesta:</h3>
+                            <p id="answer-text" class="text-gray-700">After removing gloves (The 5 Moments are: before touching a patient, before clean/aseptic procedures, after body fluid exposure risk, after touching a patient, and after touching patient surroundings)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Options -->
+                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <!-- Options will be inserted here by JavaScript -->
+                </div>
+
+                <!-- Feedback -->
+                <div id="feedback" class="hidden mb-6 p-4 rounded-lg"></div>
+
+                <!-- Navigation -->
+                <div class="flex justify-between">
+                    <button id="prev-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <i class="fas fa-arrow-left mr-2"></i> Anterior
+                    </button>
+                    <button id="next-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Siguiente <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Screen -->
+            <div id="results-screen" class="hidden bg-white rounded-xl shadow-lg p-8 text-center">
+                <div class="w-32 h-32 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-trophy text-yellow-500 text-6xl"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-blue-800 mb-4">¡Desafío Completado!</h2>
+                <p id="results-text" class="text-gray-600 mb-6">Obtuviste 8/11 en el Desafío de Seguridad en Medicación.</p>
+                <div class="bg-blue-50 rounded-lg p-4 mb-8 text-left max-w-md mx-auto">
+                    <h3 class="font-bold text-blue-800 mb-2">Conclusiones Clave:</h3>
+                    <ul class="list-disc pl-5 text-gray-700 space-y-1">
+                        <li>Always verify the 10 rights of medication administration</li>
+                        <li>Double-check high-risk medications</li>
+                        <li>Proper hand hygiene prevents infections</li>
+                    </ul>
+                </div>
+                <button id="restart-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105">
+                    Try Again <i class="fas fa-redo ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game Data
+        const steps = [
+            {
+                title: "Hand Hygiene (5 Moments WHO)",
+                question: "Which of these is NOT one of the WHO's 5 Moments for Hand Hygiene?",
+                answer: "After removing gloves (The 5 Moments are: before touching a patient, before clean/aseptic procedures, after body fluid exposure risk, after touching a patient, and after touching patient surroundings)",
+                options: [
+                    "Before touching a patient",
+                    "Before clean/aseptic procedures",
+                    "After removing gloves",
+                    "After touching patient surroundings"
+                ],
+                correct: 2
+            },
+            {
+                title: "Medication Route Verification",
+                question: "What should you verify first when checking a medication prescription?",
+                answer: "All of the above (Complete prescription includes name, dose, route, frequency, and signature)",
+                options: [
+                    "Patient name",
+                    "Medication dose",
+                    "Route of administration",
+                    "All of the above"
+                ],
+                correct: 3
+            },
+            {
+                title: "Patient Identification",
+                question: "What are the two required patient identifiers?",
+                answer: "Full name and document number or birth date",
+                options: [
+                    "Room number and bed number",
+                    "Full name and document number or birth date",
+                    "Age and gender",
+                    "Diagnosis and treatment plan"
+                ],
+                correct: 1
+            },
+            {
+                title: "Allergy Verification",
+                question: "Where should you check for patient allergies?",
+                answer: "Both wristband and medical history",
+                options: [
+                    "Only the wristband",
+                    "Only the medical history",
+                    "Both wristband and medical history",
+                    "Ask the patient's family"
+                ],
+                correct: 2
+            },
+            {
+                title: "Medication Storage",
+                question: "How should Metronidazole be stored?",
+                answer: "Protected from light",
+                options: [
+                    "At room temperature",
+                    "Refrigerated (2-8°C)",
+                    "Protected from light",
+                    "In a locked cabinet"
+                ],
+                correct: 2
+            },
+            {
+                title: "Medication Labeling",
+                question: "What color label should high-risk medications like concentrated electrolytes have?",
+                answer: "Red",
+                options: [
+                    "Green",
+                    "Yellow",
+                    "Red",
+                    "Blue"
+                ],
+                correct: 2
+            },
+            {
+                title: "LASA Medications",
+                question: "What does LASA stand for in medication safety?",
+                answer: "Look-Alike/Sound-Alike",
+                options: [
+                    "Label And Storage Alert",
+                    "Look-Alike/Sound-Alike",
+                    "Liquid And Solid Administration",
+                    "Legal Administration Safety Alert"
+                ],
+                correct: 1
+            },
+            {
+                title: "10 Rights of Medication",
+                question: "Which of these is NOT one of the 10 rights of medication administration?",
+                answer: "Right insurance (The 10 rights are: patient, medication, dose, route, time, documentation, form, compatibility, diluent, and rate)",
+                options: [
+                    "Right patient",
+                    "Right dose",
+                    "Right insurance",
+                    "Right route"
+                ],
+                correct: 2
+            },
+            {
+                title: "Double Verification",
+                question: "What should two professionals verify during double-checking?",
+                answer: "All of the above",
+                options: [
+                    "Prescription vs medication presentation",
+                    "Dilution and dose calculation",
+                    "Route and infusion rate",
+                    "All of the above"
+                ],
+                correct: 3
+            },
+            {
+                title: "Medication Administration",
+                question: "What should you do for incompatible IV medications?",
+                answer: "Use a dedicated lumen",
+                options: [
+                    "Mix them slowly",
+                    "Use a dedicated lumen",
+                    "Administer one hour apart",
+                    "Dilute with normal saline"
+                ],
+                correct: 1
+            },
+            {
+                title: "Adverse Event Response",
+                question: "What is the first action for a suspected adverse drug reaction?",
+                answer: "Stop the infusion",
+                options: [
+                    "Notify the physician",
+                    "Document in the chart",
+                    "Stop the infusion",
+                    "Administer an antidote"
+                ],
+                correct: 2
+            }
+        ];
+
+        // Game State
+        let currentStep = 0;
+        let score = 0;
+        let selectedOption = null;
+        let answered = false;
+
+        // DOM Elements
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const startBtn = document.getElementById('start-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const currentStepEl = document.getElementById('current-step');
+        const stepTitle = document.getElementById('step-title');
+        const questionText = document.getElementById('question-text');
+        const answerText = document.getElementById('answer-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedback = document.getElementById('feedback');
+        const resultsText = document.getElementById('results-text');
+        const questionCard = document.getElementById('question-card');
+
+        // Event Listeners
+        startBtn.addEventListener('click', startGame);
+        prevBtn.addEventListener('click', prevStep);
+        nextBtn.addEventListener('click', nextStep);
+        restartBtn.addEventListener('click', restartGame);
+
+        // Functions
+        function startGame() {
+            startScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            loadStep(currentStep);
+        }
+
+        function loadStep(stepIndex) {
+            const step = steps[stepIndex];
+            
+            // Update progress
+            const progress = ((stepIndex + 1) / steps.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `Step ${stepIndex + 1} of ${steps.length}`;
+            currentStepEl.textContent = stepIndex + 1;
+            stepTitle.textContent = step.title;
+            
+            // Update question and answer
+            questionText.textContent = step.question;
+            answerText.textContent = step.answer;
+            
+            // Reset card state
+            questionCard.classList.remove('flipped');
+            
+            // Update options
+            optionsContainer.innerHTML = '';
+            step.options.forEach((option, index) => {
+                const optionEl = document.createElement('button');
+                optionEl.className = 'option-btn bg-white hover:bg-blue-50 text-gray-800 font-medium py-3 px-4 border border-gray-200 rounded-lg text-left transition duration-200';
+                optionEl.textContent = option;
+                optionEl.dataset.index = index;
+                optionEl.addEventListener('click', () => selectOption(optionEl, index));
+                optionsContainer.appendChild(optionEl);
+            });
+            
+            // Update navigation buttons
+            prevBtn.disabled = stepIndex === 0;
+            nextBtn.disabled = !answered;
+            
+            // Reset feedback and selection
+            feedback.classList.add('hidden');
+            selectedOption = null;
+            answered = false;
+        }
+
+        function selectOption(optionEl, optionIndex) {
+            if (answered) return;
+            
+            // Remove previous selection
+            const options = document.querySelectorAll('.option-btn');
+            options.forEach(opt => {
+                opt.classList.remove('bg-blue-100', 'border-blue-300');
+            });
+            
+            // Set new selection
+            optionEl.classList.add('bg-blue-100', 'border-blue-300');
+            selectedOption = optionIndex;
+            
+            // Enable next button
+            nextBtn.disabled = false;
+        }
+
+        function flipCard() {
+            questionCard.classList.toggle('flipped');
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                loadStep(currentStep);
+            }
+        }
+
+        function nextStep() {
+            if (!answered && selectedOption !== null) {
+                checkAnswer();
+            } else {
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    loadStep(currentStep);
+                } else {
+                    endGame();
+                }
+            }
+        }
+
+        function checkAnswer() {
+            const step = steps[currentStep];
+            const options = document.querySelectorAll('.option-btn');
+            const selectedBtn = options[selectedOption];
+            
+            if (selectedOption === step.correct) {
+                // Correct answer
+                selectedBtn.classList.remove('bg-blue-100', 'border-blue-300');
+                selectedBtn.classList.add('bg-green-100', 'border-green-300');
+                feedback.textContent = '¡Correcto! Bien hecho.';
+                feedback.className = 'bg-green-100 border border-green-300 text-green-700';
+                score++;
+            } else {
+                // Incorrect answer
+                selectedBtn.classList.remove('bg-blue-100', 'border-blue-300');
+                selectedBtn.classList.add('bg-red-100', 'border-red-300', 'shake');
+                options[step.correct].classList.add('bg-green-100', 'border-green-300', 'pulse');
+                feedback.textContent = 'Incorrecto. La respuesta correcta está resaltada en verde.';
+                feedback.className = 'bg-red-100 border border-red-300 text-red-700';
+                
+                // Remove shake animation after it ends
+                setTimeout(() => {
+                    selectedBtn.classList.remove('shake');
+                }, 500);
+            }
+            
+            feedback.classList.remove('hidden');
+            answered = true;
+            
+            // Update next button text if it's the last question
+            if (currentStep === steps.length - 1) {
+                nextBtn.textContent = 'Ver Resultados ';
+                nextBtn.innerHTML += '<i class="fas fa-trophy ml-2"></i>';
+            } else {
+                nextBtn.textContent = 'Next ';
+                nextBtn.innerHTML += '<i class="fas fa-arrow-right ml-2"></i>';
+            }
+        }
+
+        function endGame() {
+            gameScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            resultsText.textContent = `You scored ${score}/${steps.length} on the Medication Safety Challenge.`;
+        }
+
+        function restartGame() {
+            currentStep = 0;
+            score = 0;
+            resultsScreen.classList.add('hidden');
+            loadStep(currentStep);
+            gameScreen.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
